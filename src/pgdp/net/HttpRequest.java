@@ -16,7 +16,7 @@ public final class HttpRequest {
     }
 
     public HttpMethod getMethod(){
-        return HttpMethod.valueOf(firstLine);
+        return HttpMethod.valueOf(firstLine.substring(0, firstLine.indexOf(System.lineSeparator()) - 1));
     }
 
     public String getPath(){
