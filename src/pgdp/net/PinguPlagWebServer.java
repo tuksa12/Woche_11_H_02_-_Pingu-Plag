@@ -7,6 +7,9 @@ import java.util.Arrays;
 public class PinguPlagWebServer {
 
 	static int port = 80;
+	PinguTextCollection textCollection;
+	HtmlGenerator htmlGenerator;
+
 
 	// TODO
 
