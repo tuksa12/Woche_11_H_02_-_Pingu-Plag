@@ -12,15 +12,14 @@ public final class HttpRequest {
     public HttpRequest(String firstLine, String body) {
         this.firstLine = firstLine;
         this.body = body;
-
     }
 
     public HttpMethod getMethod(){
-        return HttpMethod.valueOf(firstLine.substring(0, firstLine.indexOf(System.lineSeparator()) - 1));
+        return HttpMethod.valueOf(firstLine.substring(0,firstLine.indexOf(" ")));
     }
 
     public String getPath(){
-        return firstLine.substring(firstLine.indexOf(System.lineSeparator()),firstLine.indexOf('?'));
+        return firstLine.substring(firstLine.indexOf(" ")+1,firstLine.indexOf('?'));
     }
 
     public Map<String, String> getParameters(){
@@ -41,7 +40,7 @@ public final class HttpRequest {
         }
 
         containsParameters = body.contains("=");
-        String parametersBody = body.substring(body.indexOf('"') + 1, body.lastIndexOf('"'));
+        String parametersBody = body;
         while(containsParameters){
             if (parametersBody.contains("&")){
                 String parameter = parametersBody.substring(0,parametersBody.indexOf('&'));

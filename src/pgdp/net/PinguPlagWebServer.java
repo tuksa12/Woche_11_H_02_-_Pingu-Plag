@@ -2,19 +2,25 @@ package pgdp.net;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 
 public class PinguPlagWebServer {
 
 	static int port = 80;
-	PinguTextCollection textCollection;
-	HtmlGenerator htmlGenerator;
-
-
-	// TODO
+	private final PinguTextCollection textCollection;
+	private final HtmlGenerator htmlGenerator;
+	BufferedReader in;
+	PrintWriter out;
 
 	public PinguPlagWebServer() throws IOException {
-		// TODO
+		this.textCollection = new PinguTextCollection();
+		this.htmlGenerator = new HtmlGenerator();
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -23,23 +29,77 @@ public class PinguPlagWebServer {
 	}
 
 	public void run() {
-		// TODO
+		try(ServerSocket serverSocket = new ServerSocket(port)) {
+			while(!Thread.currentThread().isInterrupted()){
+				connectWithClient(serverSocket.accept());
+			}
+		} catch(IOException E){
+			System.err.println("PinguPlagWebServer run() failed:" + E);
+		}
 	}
 
-	HttpResponse handleRequest(String firstLine, String body) {
-		return null; // TODO
+	private void connectWithClient(Socket client) {
+		try {
+			in = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
+			out = new PrintWriter(client.getOutputStream(), true, StandardCharsets.UTF_8);
+
+			handleRequest(in.readLine().substring(0,in.readLine().indexOf("\r\n")), tryReadBody(in));
+		} catch (Exception e) {
+			System.err.println("Client connection failed: " + e);
+		}
 	}
 
-	HttpResponse handleStartPage(HttpRequest request) {
-		return null; // TODO
+	private HttpResponse handleRequest(String firstLine, String body) {
+		if(firstLine.contains("GET") && !firstLine.contains("/texts")){
+			return handleStartPage(new HttpRequest(firstLine,body));
+		} else if(firstLine.contains("GET /texts/")){
+			return handleTextDetails(new HttpRequest(firstLine,body));
+		} else if(firstLine.contains("POST /texts")){
+			return handleNewText(new HttpRequest(firstLine,body));
+		}else if(firstLine.contains("POST") && !firstLine.contains("/texts") || firstLine.contains("GET") && firstLine.contains("GET /texts")){
+			return new HttpResponse(HttpStatus.METHOD_NOT_ALLOWED,body);
+		} else{
+			return new HttpResponse(HttpStatus.BAD_REQUEST,body);
+		}
 	}
 
-	HttpResponse handleTextDetails(HttpRequest request) {
-		return null; // TODO
+	private HttpResponse handleStartPage(HttpRequest request) {
+		try{
+			String startPage = htmlGenerator.generateStartPage(textCollection.getAll());
+			out.println(startPage);
+		} catch (Exception e){
+			return new HttpResponse(HttpStatus.NOT_FOUND, request.body);
+		}
+		return new HttpResponse(HttpStatus.OK,request.body);
 	}
 
-	HttpResponse handleNewText(HttpRequest request) {
-		return null; // TODO
+	private HttpResponse handleTextDetails(HttpRequest request) {
+		try{
+			int ID = Integer.parseInt(request.firstLine.substring(request.firstLine.indexOf(11)));
+			if(textCollection.getAll().stream().anyMatch(pinguText-> pinguText.getId()==ID)){
+				out.println(textCollection.findPlagiarismFor(ID));
+				return new HttpResponse(HttpStatus.OK,request.body);
+			} else{
+				return new HttpResponse(HttpStatus.NOT_FOUND,request.body);
+			}
+		} catch (Exception e){
+			return new HttpResponse(HttpStatus.BAD_REQUEST,request.body);
+		}
+	}
+
+	private HttpResponse handleNewText(HttpRequest request) {
+		try {
+			Map<String, String> result = request.getParameters();
+			textCollection.add(result.get("title"),result.get("author"),result.get("text"));
+			return new HttpResponse(HttpStatus.SEE_OTHER,"/texts/" + textCollection.getAll().stream()
+					.filter(text -> text.getText() == result.get("text")).findAny().get().getId());
+		} catch (Exception e){
+			return new HttpResponse(HttpStatus.BAD_REQUEST,request.body);
+		}
+	}
+
+	private PinguTextCollection getPinguTextCollection(){
+		return textCollection;
 	}
 
 	/**

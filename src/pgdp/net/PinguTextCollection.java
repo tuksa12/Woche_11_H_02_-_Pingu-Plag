@@ -3,9 +3,9 @@ package pgdp.net;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PinguTextCollection {//TODO ver como fayer funcionar com multiplos threads
+public class PinguTextCollection {
     private static Count ID = new Count();
-    private Map<Integer, PinguText> collection = new HashMap<>();
+    private Map<Long, PinguText> collection = new HashMap<>();
 
     public PinguTextCollection() {
     }
@@ -42,15 +42,15 @@ public class PinguTextCollection {//TODO ver como fayer funcionar com multiplos 
                             result.put(text, text.computeSimilarity(idPinguText));
                         }
                     });
+            return result;
         }
         return null;
     }
 
     public static class Count {
-        private int count = 0;
+        private long count = 1;
         public synchronized void inc() {
-            String s = Thread.currentThread().getName();
-            int y = count;
+            long y = count;
             count = y+1;
         }
     }
