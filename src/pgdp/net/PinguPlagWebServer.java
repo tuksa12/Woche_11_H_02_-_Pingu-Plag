@@ -49,7 +49,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
-	private HttpResponse handleRequest(String firstLine, String body) {
+	HttpResponse handleRequest(String firstLine, String body) {
 		if(firstLine.contains("GET") && !firstLine.contains("/texts")){
 			return handleStartPage(new HttpRequest(firstLine,body));
 		} else if(firstLine.contains("GET /texts/")){
@@ -63,7 +63,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
-	private HttpResponse handleStartPage(HttpRequest request) {
+	HttpResponse handleStartPage(HttpRequest request) {
 		try{
 			String startPage = htmlGenerator.generateStartPage(textCollection.getAll());
 			out.println(startPage);
@@ -73,7 +73,7 @@ public class PinguPlagWebServer {
 		return new HttpResponse(HttpStatus.OK,request.body);
 	}
 
-	private HttpResponse handleTextDetails(HttpRequest request) {
+	HttpResponse handleTextDetails(HttpRequest request) {
 		try{
 			int ID = Integer.parseInt(request.firstLine.substring(request.firstLine.indexOf(11)));
 			if(textCollection.getAll().stream().anyMatch(pinguText-> pinguText.getId()==ID)){
@@ -87,7 +87,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
-	private HttpResponse handleNewText(HttpRequest request) {
+	HttpResponse handleNewText(HttpRequest request) {
 		try {
 			Map<String, String> result = request.getParameters();
 			textCollection.add(result.get("title"),result.get("author"),result.get("text"));
@@ -98,7 +98,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
-	private PinguTextCollection getPinguTextCollection(){
+	PinguTextCollection getPinguTextCollection(){
 		return textCollection;
 	}
 
