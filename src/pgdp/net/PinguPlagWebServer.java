@@ -11,23 +11,26 @@ import java.util.Arrays;
 import java.util.Map;
 
 public class PinguPlagWebServer {
-
+	//Attributes
 	static int port = 80;
 	private final PinguTextCollection textCollection;
 	private final HtmlGenerator htmlGenerator;
 	BufferedReader in;
 	PrintWriter out;
 
+	//Constructor
 	public PinguPlagWebServer() throws IOException {
 		this.textCollection = new PinguTextCollection();
 		this.htmlGenerator = new HtmlGenerator();
 	}
 
+	//Main
 	public static void main(String[] args) throws IOException {
 		PinguPlagWebServer pinguPlagWebServer = new PinguPlagWebServer();
 		pinguPlagWebServer.run();
 	}
 
+	//Run method
 	public void run() {
 		try(ServerSocket serverSocket = new ServerSocket(port)) {
 			while(!Thread.currentThread().isInterrupted()){
@@ -38,6 +41,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
+	//Helper method to connect with the client
 	private void connectWithClient(Socket client) {
 		try {
 			in = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
@@ -49,6 +53,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
+	//handleRequest method to call each other method depending on the Strings from the request
 	HttpResponse handleRequest(String firstLine, String body) {
 		if(firstLine.contains("GET") && !firstLine.contains("/texts")){
 			return handleStartPage(new HttpRequest(firstLine,body));
@@ -63,6 +68,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
+	//Generates a start page and returns to the client
 	HttpResponse handleStartPage(HttpRequest request) {
 		try{
 			String startPage = htmlGenerator.generateStartPage(textCollection.getAll());
@@ -73,6 +79,7 @@ public class PinguPlagWebServer {
 		return new HttpResponse(HttpStatus.OK,request.body);
 	}
 
+	//Tries to handle the text details, getting the ID and finding the plagiarism
 	HttpResponse handleTextDetails(HttpRequest request) {
 		try{
 			int ID = Integer.parseInt(request.firstLine.substring(request.firstLine.indexOf(11)));
@@ -87,6 +94,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
+	//Handles new texts by adding them to the collection
 	HttpResponse handleNewText(HttpRequest request) {
 		try {
 			Map<String, String> result = request.getParameters();
@@ -98,6 +106,7 @@ public class PinguPlagWebServer {
 		}
 	}
 
+	//Returns the textCollection
 	PinguTextCollection getPinguTextCollection(){
 		return textCollection;
 	}
