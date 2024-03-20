@@ -22,6 +22,7 @@ public class PinguPlagWebServer {
 	public PinguPlagWebServer() throws IOException {
 		this.textCollection = new PinguTextCollection();
 		this.htmlGenerator = new HtmlGenerator();
+
 	}
 
 	//Main
